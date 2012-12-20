@@ -30,19 +30,21 @@ class Mesh:
     self.mesh = mesh
 
 
-def get_triangles(mesh_data, uvs, vv):
+def get_triangles_uvs(mesh_data, vv):
   triangles = []
-  #uvs = []
+  uvs = []
   uvdata = []
+
   if len(mesh_data.uv_layers) > 0:
     uvdata = mesh_data.uv_layers[0].data
-  print("tess faces length : " + str(len(mesh_data.tessfaces)))
+    uvs = [0,0]* len(vv)
+
   i = 0
   uvc = 0
+
   for face in mesh_data.tessfaces:
     vertices = face.vertices
     triangles.append((vertices[0], vertices[1], vertices[2]))
-    #print("vertice " + vertices[0] + " get this : " + vertices[0]
     print(str(i) + " append this " + str(vertices[0]) + str(vertices[1]) +str(vertices[2]))
     if uvdata:
       print(" with uv " + str(uvdata[uvc].uv) + str(uvdata[uvc+1].uv) +str(uvdata[uvc+2].uv))
@@ -51,6 +53,7 @@ def get_triangles(mesh_data, uvs, vv):
       uvs[vertices[2]] = uvdata[uvc+2].uv
     i +=1
     uvc+=3
+
     # It's a quad we need one more triangle.
     if len(vertices) == 4:
       triangles.append((vertices[0], vertices[2], vertices[3]))
@@ -59,7 +62,7 @@ def get_triangles(mesh_data, uvs, vv):
       i +=1
       uvc+=1
 
-  return triangles#, uvs
+  return triangles, uvs
       
 def get_vertices(mesh_data):
   vertices = []
@@ -77,12 +80,7 @@ def create_mesh(mesh_data):
   mesh_data.update(calc_tessface=True)
   mesh = Mesh(mesh_data)
   mesh.vertices = get_vertices(mesh_data)
-  for i in range(len(mesh.vertices)):
-    mesh.uvs.append([0,0])
-  print("vertices length : " + str(len(mesh.vertices)))
-  mesh.triangles = get_triangles(mesh_data, mesh.uvs, mesh.vertices)
-  print("triangles length : " + str(len(mesh.triangles)))
-  #mesh.triangles = get_triangles(mesh_data)
+  mesh.triangles, mesh.uvs = get_triangles_uvs(mesh_data, mesh.vertices)
   mesh.normals = get_normals(mesh_data)
 
   return mesh
