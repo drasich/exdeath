@@ -19,12 +19,15 @@ def export_object(file, object):
 
   #file.write('This is a test!');
 
+
 class Mesh:
-  mesh = None
   vertices = []
   triangles = []
   normals = []
-  uvs = []
+  uvs = [] #TODO multiple uvs
+
+  #TODO
+  textures = []
   
   def __init__(self, mesh):
     self.mesh = mesh
@@ -110,3 +113,4 @@ def write_material(file, mat):
   print("scale : " + str(mat.texture_slots[0].scale))
   if bpy.data.textures[at.name].type == 'IMAGE':
     print("filepath : " + bpy.data.textures[at.name].image.filepath)
+    
