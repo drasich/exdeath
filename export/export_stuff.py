@@ -14,8 +14,10 @@ def export_object(file, object):
     print("it's a mesh")
     mesh = create_mesh(object.data)
     write_mesh(file, mesh)
+    #TODO material
     mat = object.active_material
-    write_material(file, mat)
+    if mat:
+      write_material(file, mat)
 
   #file.write('This is a test!');
 
@@ -60,6 +62,7 @@ def get_triangles_uvs(mesh_data, vv):
     # It's a quad we need one more triangle.
     if len(vertices) == 4:
       triangles.append((vertices[0], vertices[2], vertices[3]))
+      print(str(i) + " append this4  " + str(vertices[0]) + str(vertices[2]) +str(vertices[3]))
       if uvdata:
         uvs[vertices[3]] = uvdata[uvc].uv
       i +=1
@@ -71,12 +74,15 @@ def get_vertices(mesh_data):
   vertices = []
   for v in mesh_data.vertices:
     vertices.append(v.co)
+    print(" vert  " + str(v.co))
+
   return vertices
 
 def get_normals(mesh_data):
   normals = []
   for v in mesh_data.vertices:
     normals.append(v.normal)
+    print("normal  " + str(v.normal))
   return normals
 
 def create_mesh(mesh_data):
