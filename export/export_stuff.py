@@ -6,7 +6,14 @@ def start():
   file = open('test.bin', 'bw');
   for o in bpy.data.objects:
     export_object(file, o)
+  for a in bpy.data.actions:
+    export_action(file, a)
   file.close();
+
+def export_action(file, action):
+  #to get a frame/value couple
+  #action.fcurves[1].keyframe_points[0].co
+  pass
 
 def export_object(file, object):
   print("object : ", object.name)
@@ -18,6 +25,10 @@ def export_object(file, object):
     mat = object.active_material
     if mat:
       write_material(file, mat)
+    handle_modifiers(object)
+  elif object.type == 'ARMATURE':
+    print("it's an armature")
+    # get bones with object.data.bones[0].head et tail
 
   #file.write('This is a test!');
 
@@ -50,7 +61,7 @@ def get_triangles_uvs(mesh_data, vv):
   for face in mesh_data.tessfaces:
     vertices = face.vertices
     triangles.append((vertices[0], vertices[1], vertices[2]))
-    print(str(i) + " append this " + str(vertices[0]) + str(vertices[1]) +str(vertices[2]))
+    #print(str(i) + " append this " + str(vertices[0]) + str(vertices[1]) +str(vertices[2]))
     if uvdata:
       print(" with uv " + str(uvdata[uvc].uv) + str(uvdata[uvc+1].uv) +str(uvdata[uvc+2].uv))
       uvs[vertices[0]] = uvdata[uvc].uv
@@ -62,7 +73,7 @@ def get_triangles_uvs(mesh_data, vv):
     # It's a quad we need one more triangle.
     if len(vertices) == 4:
       triangles.append((vertices[0], vertices[2], vertices[3]))
-      print(str(i) + " append this4  " + str(vertices[0]) + str(vertices[2]) +str(vertices[3]))
+      #print(str(i) + " append this4  " + str(vertices[0]) + str(vertices[2]) +str(vertices[3]))
       if uvdata:
         uvs[vertices[3]] = uvdata[uvc].uv
       i +=1
@@ -74,7 +85,7 @@ def get_vertices(mesh_data):
   vertices = []
   for v in mesh_data.vertices:
     vertices.append(v.co)
-    print(" vert  " + str(v.co))
+    #print(" vert  " + str(v.co))
 
   return vertices
 
@@ -82,7 +93,7 @@ def get_normals(mesh_data):
   normals = []
   for v in mesh_data.vertices:
     normals.append(v.normal)
-    print("normal  " + str(v.normal))
+    #print("normal  " + str(v.normal))
   return normals
 
 def create_mesh(mesh_data):
@@ -95,7 +106,7 @@ def create_mesh(mesh_data):
   return mesh
 
 def write_mesh(file, mesh):
-  print("mesh : " + str(mesh))
+  #print("mesh : " + str(mesh))
   file.write(struct.pack('H', len(mesh.vertices)))
   for v in mesh.vertices:
     file.write(struct.pack('fff', v[0], v[1], v[2]))
@@ -115,8 +126,15 @@ def write_mesh(file, mesh):
 def write_material(file, mat):
   #file.write(struct.pack('H', len(mesh.vertices)))
   at =  mat.active_texture
-  print("texture : " + str(at))
-  print("scale : " + str(mat.texture_slots[0].scale))
+  #print("texture : " + str(at))
+  #print("scale : " + str(mat.texture_slots[0].scale))
   if bpy.data.textures[at.name].type == 'IMAGE':
-    print("filepath : " + bpy.data.textures[at.name].image.filepath)
+    print("texture filepath : " + bpy.data.textures[at.name].image.filepath)
     
+def handle_modifiers(o):
+  for m in o.modifiers:
+    if m.type == 'ARMATURE':
+      print("there is an armature")
+      armature = m.object
+      print("armature name is " + armature.name)
+
