@@ -6,18 +6,32 @@ def start():
   file = open('test.bin', 'bw');
   for o in bpy.data.objects:
     export_object(file, o)
-  for a in bpy.data.actions:
-    export_action(file, a)
+    for a in bpy.data.actions:
+      export_action(file, o, a)
   file.close();
 
-def export_action(file, action):
+def export_action(file, object, action):
   #to get a frame/value couple
   #action.fcurves[1].keyframe_points[0].co
+  pr = object.path_resolve
+  for fcu in action.fcurves:
+    try:
+      prop = pr(fcu.data_path, False)
+    except:
+      prop = None
+
+    if prop is not None:
+      print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
+      print("and prop data is : " + str(prop.data))
+      print("and prop data name is : " + str(prop.data.name))
+    #else:
+    #  print("object " + object.name + " has not action " + action.name)
   pass
 
 def export_object(file, object):
   print("object : ", object.name)
   if object.type == 'MESH':
+    #TODO get vertex groups with object.vertex_groups
     print("it's a mesh")
     mesh = create_mesh(object.data)
     write_mesh(file, mesh)
@@ -28,9 +42,22 @@ def export_object(file, object):
     handle_modifiers(object)
   elif object.type == 'ARMATURE':
     print("it's an armature")
-    # get bones with object.data.bones[0].head et tail
+    bones = object.data.bones
+    for b in bones:
+      get_bone(b)
 
   #file.write('This is a test!');
+
+def get_bone(bone):
+  print("bone " + bone.name)
+  print("matrix " + str(bone.matrix))
+  print("matrix relative to armature " + str(bone.matrix_local))
+  print("matrix relative to armature to translation " + str(bone.matrix_local.to_translation()))
+  print("matrix head " + str(bone.head))
+  # I don't think we need tail and head? maybe later?
+  for b in bone.children:
+    get_bone(b)
+
 
 
 class Mesh:
@@ -39,7 +66,7 @@ class Mesh:
   normals = []
   uvs = [] #TODO multiple uvs
 
-  #TODO
+  #TODO texture name
   textures = []
   
   def __init__(self, mesh):
@@ -85,7 +112,9 @@ def get_vertices(mesh_data):
   vertices = []
   for v in mesh_data.vertices:
     vertices.append(v.co)
-    #print(" vert  " + str(v.co))
+    for g in v.groups:
+      print(" vert group  " + str(g.group))
+      print(" vert weight  " + str(g.weight))
 
   return vertices
 
