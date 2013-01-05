@@ -42,11 +42,26 @@ def export_object(file, object):
     handle_modifiers(object)
   elif object.type == 'ARMATURE':
     print("it's an armature")
-    bones = object.data.bones
-    for b in bones:
-      get_bone(b)
+    armature = create_armature(object.data)
 
   #file.write('This is a test!');
+
+class Armature:
+  bones = []
+
+#class Bone:
+#  matrix
+# child
+# name
+
+def create_armature(data):
+  armature = Armature()
+  #mesh.bones = get_bones(data.bones)
+  bones = data.bones
+  for b in bones:
+    get_bone(b)
+  return armature
+
 
 def get_bone(bone):
   print("bone " + bone.name)
