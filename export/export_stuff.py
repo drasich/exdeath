@@ -165,11 +165,13 @@ def create_mesh(mesh_data):
 
   return mesh
 
+def write_string(file, str):
+  s = str.encode('latin1')
+  file.write(struct.pack("H%ds" % len(s), len(s), s))
+
 def write_mesh(file, mesh):
   #print("mesh : " + str(mesh))
-  s = mesh.name.encode('latin1')
-  #s = mesh.name.encode('utf-8')
-  file.write(struct.pack("H%ds" % len(s), len(s), s))
+  write_string(file, mesh.name)
 
   file.write(struct.pack('H', len(mesh.vertices)))
   for v in mesh.vertices:
@@ -204,6 +206,9 @@ def handle_modifiers(o):
 
 
 def write_armature(file, armature):
+  return
+  write_string(file, "armature")
+  write_string(file, armature.name)
   return
   #print("mesh : " + str(mesh))
   file.write(struct.pack('H', len(mesh.vertices)))
