@@ -43,35 +43,48 @@ def export_object(file, object):
   elif object.type == 'ARMATURE':
     print("it's an armature")
     armature = create_armature(object.data)
+    write_armature(file, armature)
 
   #file.write('This is a test!');
 
 class Armature:
-  bones = []
+  pass #bones = []
 
-#class Bone:
+class Bone:
+  pass
 #  matrix
-# child
+# children
 # name
 
 def create_armature(data):
   armature = Armature()
-  #mesh.bones = get_bones(data.bones)
-  bones = data.bones
-  for b in bones:
-    get_bone(b)
+  armature.bones = []
+  armature.name = data.name
+  for b in data.bones:
+    bone = create_bone(b)
+    armature.bones.append(bone)
   return armature
 
 
-def get_bone(bone):
-  print("bone " + bone.name)
-  print("matrix " + str(bone.matrix))
-  print("matrix relative to armature " + str(bone.matrix_local))
-  print("matrix relative to armature to translation " + str(bone.matrix_local.to_translation()))
-  print("matrix head " + str(bone.head))
-  # I don't think we need tail and head? maybe later?
+def create_bone(bone):
+  bo = Bone()
+  #bo.test
+  bo.name = bone.name
+  bo.matrix = bone.matrix_local
+  bo.position = bone.matrix_local.to_translation()
+  bo.rotation = bone.matrix_local.to_quaternion()
+  #print("bone " + bone.name)
+  #print("matrix " + str(bone.matrix))
+  #print("matrix relative to armature " + str(bone.matrix_local))
+  #print("matrix relative to armature to translation " + str(bone.matrix_local.to_translation()))
+  #print("matrix head " + str(bone.head))
+  #head = position
+  # I don't think we need tail? maybe later?
+  bo.children = []
   for b in bone.children:
-    get_bone(b)
+    child = create_bone(b)
+    bo.children.append(child)
+
 
 
 
@@ -127,9 +140,11 @@ def get_vertices(mesh_data):
   vertices = []
   for v in mesh_data.vertices:
     vertices.append(v.co)
-    for g in v.groups:
-      print(" vert group  " + str(g.group))
-      print(" vert weight  " + str(g.weight))
+    #TODO weight and groups
+    #for g in v.groups:
+
+      #print(" vert group  " + str(g.group))
+      #print(" vert weight  " + str(g.weight))
 
   return vertices
 
@@ -143,6 +158,7 @@ def get_normals(mesh_data):
 def create_mesh(mesh_data):
   mesh_data.update(calc_tessface=True)
   mesh = Mesh(mesh_data)
+  mesh.name = mesh_data.name
   mesh.vertices = get_vertices(mesh_data)
   mesh.triangles, mesh.uvs = get_triangles_uvs(mesh_data, mesh.vertices)
   mesh.normals = get_normals(mesh_data)
@@ -151,6 +167,10 @@ def create_mesh(mesh_data):
 
 def write_mesh(file, mesh):
   #print("mesh : " + str(mesh))
+  s = mesh.name.encode('latin1')
+  #s = mesh.name.encode('utf-8')
+  file.write(struct.pack("H%ds" % len(s), len(s), s))
+
   file.write(struct.pack('H', len(mesh.vertices)))
   for v in mesh.vertices:
     file.write(struct.pack('fff', v[0], v[1], v[2]))
@@ -182,3 +202,22 @@ def handle_modifiers(o):
       armature = m.object
       print("armature name is " + armature.name)
 
+
+def write_armature(file, armature):
+  return
+  #print("mesh : " + str(mesh))
+  file.write(struct.pack('H', len(mesh.vertices)))
+  for v in mesh.vertices:
+    file.write(struct.pack('fff', v[0], v[1], v[2]))
+
+  file.write(struct.pack('H', len(mesh.triangles)))
+  for t in mesh.triangles:
+    file.write(struct.pack('HHH', t[0], t[1], t[2]))
+
+  file.write(struct.pack('H', len(mesh.vertices)))
+  for n in mesh.normals:
+    file.write(struct.pack('fff', n[0], n[1], n[2])) 
+
+  file.write(struct.pack('H', len(mesh.uvs)))
+  for uv in mesh.uvs:
+    file.write(struct.pack('ff', uv[0], uv[1])) 
