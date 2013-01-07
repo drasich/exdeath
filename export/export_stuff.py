@@ -60,6 +60,7 @@ def create_armature(data):
   armature = Armature()
   armature.bones = []
   armature.name = data.name
+  #TODO position and rotation of armature
   for b in data.bones:
     bone = create_bone(b)
     armature.bones.append(bone)
@@ -155,6 +156,7 @@ def get_normals(mesh_data):
   return normals
 
 def create_mesh(mesh_data):
+  #TODO position and rotation of mesh or object
   mesh_data.update(calc_tessface=True)
   mesh = Mesh(mesh_data)
   mesh.name = mesh_data.name
