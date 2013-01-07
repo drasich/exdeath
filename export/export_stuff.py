@@ -85,8 +85,7 @@ def create_bone(bone):
     child = create_bone(b)
     bo.children.append(child)
 
-
-
+  return bo
 
 class Mesh:
   vertices = []
@@ -210,23 +209,23 @@ def handle_modifiers(o):
 
 
 def write_armature(file, armature):
-  return
+  #return
   write_type(file, "armature")
   write_string(file, armature.name)
-  return
-  #print("mesh : " + str(mesh))
-  file.write(struct.pack('H', len(mesh.vertices)))
-  for v in mesh.vertices:
-    file.write(struct.pack('fff', v[0], v[1], v[2]))
+  file.write(struct.pack('H', len(armature.bones)))
+  for bone in armature.bones:
+    write_bone(file, bone)
 
-  file.write(struct.pack('H', len(mesh.triangles)))
-  for t in mesh.triangles:
-    file.write(struct.pack('HHH', t[0], t[1], t[2]))
 
-  file.write(struct.pack('H', len(mesh.vertices)))
-  for n in mesh.normals:
-    file.write(struct.pack('fff', n[0], n[1], n[2])) 
+def write_bone(file, bone):
+  write_string(file, bone.name)
+  v = bone.position
+  file.write(struct.pack('fff', v[0], v[1], v[2]))
+  v = bone.rotation
+  file.write(struct.pack('ffff', v[0], v[1], v[2], v[3]))
+  file.write(struct.pack('H', len(bone.children)))
+  for c in bone.children:
+    write_bone(file, c)
 
-  file.write(struct.pack('H', len(mesh.uvs)))
-  for uv in mesh.uvs:
-    file.write(struct.pack('ff', uv[0], uv[1])) 
+
+
