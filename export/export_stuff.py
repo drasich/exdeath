@@ -1,16 +1,23 @@
 import bpy
 import struct
 
+objects_to_write = []
+
 def start():
+  for o in bpy.data.objects:
+    export_object(o)
+    for a in bpy.data.actions:
+      export_action(o, a)
+
   print("will write to test.bin")
   file = open('test.bin', 'bw');
-  for o in bpy.data.objects:
-    export_object(file, o)
-    for a in bpy.data.actions:
-      export_action(file, o, a)
+  file.write(struct.pack('H', len(objects_to_write)))
+  for o in objects_to_write:
+    o.write(file)
   file.close();
 
-def export_action(file, object, action):
+
+def export_action(object, action):
   #to get a frame/value couple
   #action.fcurves[1].keyframe_points[0].co
   pr = object.path_resolve
@@ -28,27 +35,35 @@ def export_action(file, object, action):
     #  print("object " + object.name + " has not action " + action.name)
   pass
 
-def export_object(file, object):
+def export_object(object):
   print("object : ", object.name)
   if object.type == 'MESH':
     #TODO get vertex groups with object.vertex_groups
     print("it's a mesh")
+
     mesh = create_mesh(object.data)
-    write_mesh(file, mesh)
+    objects_to_write.append(mesh)
     #TODO material
     mat = object.active_material
     if mat:
-      write_material(file, mat)
+      write_material(mat)
     handle_modifiers(object)
   elif object.type == 'ARMATURE':
     print("it's an armature")
     armature = create_armature(object.data)
-    write_armature(file, armature)
-
-  #file.write('This is a test!');
+    objects_to_write.append(armature)
 
 class Armature:
   pass #bones = []
+
+  def write(armature, file):
+    #return
+    write_type(file, "armature")
+    write_string(file, armature.name)
+    file.write(struct.pack('H', len(armature.bones)))
+    for bone in armature.bones:
+      write_bone(file, bone)
+
 
 class Bone:
   pass
@@ -100,6 +115,27 @@ class Mesh:
   def __init__(self, mesh):
     self.mesh = mesh
 
+  def write(mesh, file):
+    #print("mesh : " + str(mesh))
+    write_type(file, "mesh")
+    write_string(file, mesh.name)
+  
+    file.write(struct.pack('H', len(mesh.vertices)))
+    for v in mesh.vertices:
+      file.write(struct.pack('fff', v[0], v[1], v[2]))
+  
+    file.write(struct.pack('H', len(mesh.triangles)))
+    for t in mesh.triangles:
+      file.write(struct.pack('HHH', t[0], t[1], t[2]))
+  
+    file.write(struct.pack('H', len(mesh.vertices)))
+    for n in mesh.normals:
+      file.write(struct.pack('fff', n[0], n[1], n[2])) 
+  
+    file.write(struct.pack('H', len(mesh.uvs)))
+    for uv in mesh.uvs:
+      file.write(struct.pack('ff', uv[0], uv[1])) 
+  
 
 def get_triangles_uvs(mesh_data, vv):
   triangles = []
@@ -172,29 +208,8 @@ def write_type(file, str):
 def write_string(file, str):
   s = str.encode('latin1')
   file.write(struct.pack("H%ds" % len(s), len(s), s))
-
-def write_mesh(file, mesh):
-  #print("mesh : " + str(mesh))
-  write_type(file, "mesh")
-  write_string(file, mesh.name)
-
-  file.write(struct.pack('H', len(mesh.vertices)))
-  for v in mesh.vertices:
-    file.write(struct.pack('fff', v[0], v[1], v[2]))
-
-  file.write(struct.pack('H', len(mesh.triangles)))
-  for t in mesh.triangles:
-    file.write(struct.pack('HHH', t[0], t[1], t[2]))
-
-  file.write(struct.pack('H', len(mesh.vertices)))
-  for n in mesh.normals:
-    file.write(struct.pack('fff', n[0], n[1], n[2])) 
-
-  file.write(struct.pack('H', len(mesh.uvs)))
-  for uv in mesh.uvs:
-    file.write(struct.pack('ff', uv[0], uv[1])) 
-  
-def write_material(file, mat):
+ 
+def write_material(mat):
   #file.write(struct.pack('H', len(mesh.vertices)))
   at =  mat.active_texture
   #print("texture : " + str(at))
@@ -208,16 +223,6 @@ def handle_modifiers(o):
       print("there is an armature")
       armature = m.object
       print("armature name is " + armature.name)
-
-
-def write_armature(file, armature):
-  #return
-  write_type(file, "armature")
-  write_string(file, armature.name)
-  file.write(struct.pack('H', len(armature.bones)))
-  for bone in armature.bones:
-    write_bone(file, bone)
-
 
 def write_bone(file, bone):
   write_string(file, bone.name)
