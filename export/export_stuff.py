@@ -35,14 +35,31 @@ def export_action(object, action):
     #  print("object " + object.name + " has not action " + action.name)
   pass
 
+class VertexGroup:
+  pass
+
+  def __init__(self, index, name):
+    self.index = index
+    self.name = name
+
 def export_object(object):
   print("object : ", object.name)
   if object.type == 'MESH':
-    #TODO get vertex groups with object.vertex_groups
     print("it's a mesh")
-
     mesh = create_mesh(object.data)
     objects_to_write.append(mesh)
+    mesh.groups = []
+    #TODO get vertex groups with object.vertex_groups
+    for vg in object.vertex_groups:
+      g = VertexGroup(vg.index, vg.name)
+      mesh.groups.append(g)
+      print("vg index : " + str(vg.index))
+      print("vg name : " + str(vg.name))
+      try:
+        print("vg weight of vertex 0 : " + str(vg.weight(0)))
+      except:
+        print("vertex 0 is not in this group")
+
     #TODO material
     mat = object.active_material
     if mat:
@@ -135,6 +152,16 @@ class Mesh:
     file.write(struct.pack('H', len(mesh.uvs)))
     for uv in mesh.uvs:
       file.write(struct.pack('ff', uv[0], uv[1])) 
+
+    # TODO write vertex groups
+    # for all groups
+    # name
+    # index
+
+    #TODO write vertex weights
+    # for all vertex
+    # index
+    # weight
   
 
 def get_triangles_uvs(mesh_data, vv):
@@ -171,18 +198,24 @@ def get_triangles_uvs(mesh_data, vv):
       uvc+=1
 
   return triangles, uvs
+
       
 def get_vertices(mesh_data):
   vertices = []
   for v in mesh_data.vertices:
     vertices.append(v.co)
-    #TODO weight and groups
-    #for g in v.groups:
-
-      #print(" vert group  " + str(g.group))
-      #print(" vert weight  " + str(g.weight))
-
   return vertices
+
+def get_weights(mesh_data):
+  weights = []
+  for v in mesh_data.vertices:
+    #TODO weight and groups
+    for g in v.groups:
+      w = (g.group, g.weight)
+      weights.append(w)
+      print(" vert group  " + str(g.group))
+      print(" vert weight  " + str(g.weight))
+
 
 def get_normals(mesh_data):
   normals = []
@@ -196,7 +229,9 @@ def create_mesh(mesh_data):
   mesh_data.update(calc_tessface=True)
   mesh = Mesh(mesh_data)
   mesh.name = mesh_data.name
+  #TODO we parse vertices 2 times
   mesh.vertices = get_vertices(mesh_data)
+  mesh.weights = get_weights(mesh_data)
   mesh.triangles, mesh.uvs = get_triangles_uvs(mesh_data, mesh.vertices)
   mesh.normals = get_normals(mesh_data)
 
