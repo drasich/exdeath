@@ -35,13 +35,6 @@ def export_action(object, action):
     #  print("object " + object.name + " has not action " + action.name)
   pass
 
-class VertexGroup:
-  pass
-
-  def __init__(self, index, name):
-    self.index = index
-    self.name = name
-
 def export_object(object):
   print("object : ", object.name)
   if object.type == 'MESH':
@@ -51,7 +44,7 @@ def export_object(object):
     mesh.groups = []
     #TODO get vertex groups with object.vertex_groups
     for vg in object.vertex_groups:
-      g = VertexGroup(vg.index, vg.name)
+      g = (vg.index, vg.name)
       mesh.groups.append(g)
       print("vg index : " + str(vg.index))
       print("vg name : " + str(vg.name))
@@ -145,7 +138,7 @@ class Mesh:
     for t in mesh.triangles:
       file.write(struct.pack('HHH', t[0], t[1], t[2]))
   
-    file.write(struct.pack('H', len(mesh.vertices)))
+    file.write(struct.pack('H', len(mesh.normals)))
     for n in mesh.normals:
       file.write(struct.pack('fff', n[0], n[1], n[2])) 
   
@@ -154,14 +147,23 @@ class Mesh:
       file.write(struct.pack('ff', uv[0], uv[1])) 
 
     # TODO write vertex groups
-    # for all groups
-    # name
-    # index
+    # number of groups
+    file.write(struct.pack('H', len(mesh.groups)))
+    for g in mesh.groups:
+      # name
+      # index
+      write_string(file, g[1])
+      file.write(struct.pack('H', g[0]))
 
     #TODO write vertex weights
-    # for all vertex
-    # index
-    # weight
+    # number of vertex
+    file.write(struct.pack('H', len(mesh.weights)))
+    for w in mesh.weights:
+      # index
+      # weight
+      file.write(struct.pack('H', w[0]))
+      file.write(struct.pack('f', w[1]))
+      #print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
   
 
 def get_triangles_uvs(mesh_data, vv):
@@ -215,6 +217,7 @@ def get_weights(mesh_data):
       weights.append(w)
       print(" vert group  " + str(g.group))
       print(" vert weight  " + str(g.weight))
+  return weights
 
 
 def get_normals(mesh_data):
