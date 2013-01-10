@@ -16,10 +16,19 @@ def start():
     o.write(file)
   file.close();
 
+class Action:
+  def __init__(self, name):
+    self.name = name
 
+  def addProperty(self, name, stuff):
+    pass
+
+from bpy.types import PoseBone
 def export_action(object, action):
   #to get a frame/value couple
   #action.fcurves[1].keyframe_points[0].co
+
+  actions = []
   pr = object.path_resolve
   for fcu in action.fcurves:
     try:
@@ -31,6 +40,10 @@ def export_action(object, action):
       print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
       print("and prop data is : " + str(prop.data))
       print("and prop data name is : " + str(prop.data.name))
+      if isinstance(prop.data, PoseBone):
+        print("bone associated : " + str(prop.data.bone))
+        print("bone group : " + str(prop.data.bone_group))
+        print("posebone basename  : " + str(prop.data.basename))
     #else:
     #  print("object " + object.name + " has not action " + action.name)
   pass
@@ -215,8 +228,8 @@ def get_weights(mesh_data):
     for g in v.groups:
       w = (g.group, g.weight)
       weights.append(w)
-      print(" vert group  " + str(g.group))
-      print(" vert weight  " + str(g.weight))
+      #print(" vert group  " + str(g.group))
+      #print(" vert weight  " + str(g.weight))
   return weights
 
 
