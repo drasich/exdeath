@@ -37,19 +37,25 @@ def export_action(object, action):
   for fcu in action.fcurves:
     try:
       print("curve data path : " + fcu.data_path)
+      #print("Object rotation mode : " + object.rotation_mode)
+      if fcu.data_path.endswith("scale"):
+        print("it's a scale")
+
+
       prop = pr(fcu.data_path, False)
     except:
       prop = None
 
     if prop is not None:
       print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
-      print("dir prop : " + str(dir(prop.data)))
+      #print("dir prop : " + str(dir(prop.data)))
       print("and prop data is : " + str(prop.data))
       print("and prop data name is : " + str(prop.data.name))
       print("and prop type is : " + str(type(prop)))
 
       if isinstance(prop.data, PoseBone):
         print("bone associated : " + str(prop.data.bone))
+        print("bone rotmode : " + str(prop.data.rotation_mode))
         print("bone group : " + str(prop.data.bone_group))
         print("posebone basename  : " + str(prop.data.basename))
 
