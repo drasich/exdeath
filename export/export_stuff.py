@@ -19,16 +19,29 @@ def start():
 class Action:
   def __init__(self, name):
     self.name = name
+    self.curves = []
 
-  def addProperty(self, name, stuff):
+  def addCurve(self, c):
+    self.curves.append(c)
     pass
+
+class Curve:
+  def __init__(self, bone, t):
+    self.name = bone
+    self.type = t
+    self.frames = []
+
+  def addFrame(self, frame, value):
+    self.frames.append((frame, value))
+    pass
+
 
 from bpy.types import PoseBone
 def export_action(object, action):
   a = Action(action.name)
-  print("action name " + action.name)
-  print("action frame range " + str(action.frame_range))
-
+  a.frame_range = action.frame_range
+  #print("action name " + action.name)
+  #print("action frame range " + str(action.frame_range))
   #to get a frame/value couple
   #action.fcurves[1].keyframe_points[0].co
 
@@ -36,7 +49,7 @@ def export_action(object, action):
   pr = object.path_resolve
   for fcu in action.fcurves:
     try:
-      print("curve data path : " + fcu.data_path)
+      #print("curve data path : " + fcu.data_path)
       #print("Object rotation mode : " + object.rotation_mode)
       prop = pr(fcu.data_path, False)
     except:
@@ -45,24 +58,34 @@ def export_action(object, action):
     if prop is not None:
       print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
       #print("dir prop : " + str(dir(prop.data)))
-      print("and prop data is : " + str(prop.data))
-      print("and prop data name is : " + str(prop.data.name))
-      print("and prop type is : " + str(type(prop)))
+      #print("and prop data is : " + str(prop.data))
+      #print("and prop data name is : " + str(prop.data.name))
+      #print("and prop type is : " + str(type(prop)))
+
 
       if isinstance(prop.data, PoseBone):
-        print("bone associated : " + str(prop.data.bone))
-        print("bone rotmode : " + str(prop.data.rotation_mode))
-        print("bone group : " + str(prop.data.bone_group))
-        print("posebone basename  : " + str(prop.data.basename))
+        #print("bone associated : " + str(prop.data.bone))
+        #print("bone associated name : " + str(prop.data.bone.name))
+        #print("bone rotmode : " + str(prop.data.rotation_mode))
+        #print("bone group : " + str(prop.data.bone_group))
+        #print("posebone basename  : " + str(prop.data.basename))
+
+        t = ""
 
         if fcu.data_path.endswith("scale"):
-          print("it's a scale")
+          t = "scale"
         elif fcu.data_path.endswith("rotation_quaternion"):
-          print("it's a quat")
+          t ="quaternion"
         elif fcu.data_path.endswith("rotation_euler"):
           print("it's euler angles but how do we know the angles order?")
+          t = "euler"
         elif fcu.data_path.endswith("location"):
-          print("it's a position")
+          t="position"
+
+        curve = Curve(prop.data.bone.name, t)
+        for frame in fcu.keyframe_points:
+          curve.frames.append(frame.co)
+          print("couple : " + str(frame.co))
 
         #j'ai besoin de :
         # bone name
