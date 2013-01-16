@@ -38,10 +38,6 @@ def export_action(object, action):
     try:
       print("curve data path : " + fcu.data_path)
       #print("Object rotation mode : " + object.rotation_mode)
-      if fcu.data_path.endswith("scale"):
-        print("it's a scale")
-
-
       prop = pr(fcu.data_path, False)
     except:
       prop = None
@@ -58,6 +54,15 @@ def export_action(object, action):
         print("bone rotmode : " + str(prop.data.rotation_mode))
         print("bone group : " + str(prop.data.bone_group))
         print("posebone basename  : " + str(prop.data.basename))
+
+        if fcu.data_path.endswith("scale"):
+          print("it's a scale")
+        elif fcu.data_path.endswith("rotation_quaternion"):
+          print("it's a quat")
+        elif fcu.data_path.endswith("rotation_euler"):
+          print("it's euler angles but how do we know the angles order?")
+        elif fcu.data_path.endswith("location"):
+          print("it's a position")
 
         #j'ai besoin de :
         # bone name
