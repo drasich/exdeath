@@ -1,13 +1,19 @@
 import bpy
 import struct
 
-objects_to_write = []
 
 def start():
+  objects_to_write = []
   for o in bpy.data.objects:
-    export_object(o)
+    obj = export_object(o)
     for a in bpy.data.actions:
       action = export_action(o, a)
+      if obj is not None and action is not None:
+        print("adding action to object")
+        obj.actions.append(action)
+
+    if obj is not None:
+      objects_to_write.append(obj)
 
   print("will write to test.bin")
   file = open('test.bin', 'bw');
@@ -22,10 +28,14 @@ class Action:
     self.curves = []
 
   def getOrCreateCurve(self, bone_name, t):
+    #TODO can optimize this?
     for c in self.curves:
       if c.bone == bone_name and c.datatype == t:
         return c
-    return Curve(bone_name, t)
+
+    c = Curve(bone_name, t)
+    self.curves.append(c)
+    return c
 
 class Curve:
   def __init__(self, bone, t):
@@ -93,7 +103,7 @@ def export_action(object, action):
           curve.addFrame(frame.co[0], fcu.array_index, frame.co[1])
           #print("couple : " + str(frame.co))
 
-        a.curves.append(curve)
+        #a.curves.append(curve)
         #j'ai besoin de :
         # bone name
         # savoir ce que c'est genre position rotation x, y z w
@@ -108,7 +118,7 @@ def export_object(object):
   if object.type == 'MESH':
     print("it's a mesh")
     mesh = create_mesh(object.data)
-    objects_to_write.append(mesh)
+    #objects_to_write.append(mesh)
     mesh.groups = []
     #TODO get vertex groups with object.vertex_groups
     for vg in object.vertex_groups:
@@ -126,10 +136,14 @@ def export_object(object):
     if mat:
       write_material(mat)
     handle_modifiers(object)
+    return mesh
   elif object.type == 'ARMATURE':
     print("it's an armature")
     armature = create_armature(object.data)
-    objects_to_write.append(armature)
+    #objects_to_write.append(armature)
+    return armature
+
+  return None
 
 class Armature:
   pass #bones = []
@@ -138,9 +152,27 @@ class Armature:
     #return
     write_type(file, "armature")
     write_string(file, armature.name)
+
     file.write(struct.pack('H', len(armature.bones)))
     for bone in armature.bones:
       write_bone(file, bone)
+
+    file.write(struct.pack('H', len(armature.actions)))
+    for action in armature.actions:
+      #print("i have to write action : " + action.name)
+      write_string(file, action.name)
+      file.write(struct.pack('H', len(action.curves)))
+      for curve in action.curves:
+        write_string(file, curve.bone)
+        write_string(file, curve.datatype)
+        file.write(struct.pack('H', len(curve.frames)))
+        for frame in curve.frames:
+          #print("   frame : " + str(frame[0]) + " with value : " + str(frame[1]))
+          file.write(struct.pack('f', frame[0]))
+          for value in frame[1]:
+            #print("       writing value : " + str(value))
+            file.write(struct.pack('f', value))
+
 
 
 class Bone:
@@ -152,6 +184,7 @@ class Bone:
 def create_armature(data):
   armature = Armature()
   armature.bones = []
+  armature.actions = []
   armature.name = data.name
   #TODO position and rotation of armature
   for b in data.bones:
