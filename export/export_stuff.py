@@ -7,7 +7,7 @@ def start():
   for o in bpy.data.objects:
     export_object(o)
     for a in bpy.data.actions:
-      export_action(o, a)
+      action = export_action(o, a)
 
   print("will write to test.bin")
   file = open('test.bin', 'bw');
@@ -21,43 +21,48 @@ class Action:
     self.name = name
     self.curves = []
 
-  def addCurve(self, c):
-    self.curves.append(c)
-    pass
+  def getOrCreateCurve(self, bone_name, t):
+    for c in self.curves:
+      if c.bone == bone_name and c.datatype == t:
+        return c
+    return Curve(bone_name, t)
 
 class Curve:
   def __init__(self, bone, t):
-    self.name = bone
-    self.type = t
+    self.bone = bone
+    self.datatype = t
     self.frames = []
 
-  def addFrame(self, frame, value):
-    self.frames.append((frame, value))
-    pass
+  def addFrame(self, frame, index, value):
+    found = False
+    for f in self.frames:
+      if f[0] == frame:
+        f[1][index] = value
+        found = True
+        break
+    if not found:
+      if self.datatype == "quaternion":
+        self.frames.append((frame, [0,0,0,0]))
+      else:
+        self.frames.append((frame, [0,0,0]))
+      f = self.frames[-1]
+      f[1][index] = value
 
 
 from bpy.types import PoseBone
 def export_action(object, action):
   a = Action(action.name)
   a.frame_range = action.frame_range
-  #print("action name " + action.name)
-  #print("action frame range " + str(action.frame_range))
-  #to get a frame/value couple
-  #action.fcurves[1].keyframe_points[0].co
 
-  actions = []
   pr = object.path_resolve
   for fcu in action.fcurves:
     try:
-      #print("curve data path : " + fcu.data_path)
-      #print("Object rotation mode : " + object.rotation_mode)
       prop = pr(fcu.data_path, False)
     except:
       prop = None
 
     if prop is not None:
-      print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
-      #print("dir prop : " + str(dir(prop.data)))
+      #print("object " + object.name + " has action " + action.name + " with prop : " + str(prop))
       #print("and prop data is : " + str(prop.data))
       #print("and prop data name is : " + str(prop.data.name))
       #print("and prop type is : " + str(type(prop)))
@@ -82,18 +87,21 @@ def export_action(object, action):
         elif fcu.data_path.endswith("location"):
           t="position"
 
-        curve = Curve(prop.data.bone.name, t)
+        curve = a.getOrCreateCurve(prop.data.bone.name, t)
         for frame in fcu.keyframe_points:
-          curve.frames.append(frame.co)
-          print("couple : " + str(frame.co))
+          #curve.frames.append(frame.co)
+          curve.addFrame(frame.co[0], fcu.array_index, frame.co[1])
+          #print("couple : " + str(frame.co))
 
+        a.curves.append(curve)
         #j'ai besoin de :
         # bone name
         # savoir ce que c'est genre position rotation x, y z w
         #
-    #else:
-    #  print("object " + object.name + " has not action " + action.name)
-  pass
+  if len(a.curves) == 0: return None
+  return a
+
+
 
 def export_object(object):
   print("object : ", object.name)
