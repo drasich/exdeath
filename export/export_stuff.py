@@ -111,6 +111,10 @@ def export_action(object, action):
   if len(a.curves) == 0: return None
   return a
 
+class VertexGroup:
+  def __init__(self, name):
+    self.name = name
+    self.weights = []
 
 
 def export_object(object):
@@ -118,18 +122,27 @@ def export_object(object):
   if object.type == 'MESH':
     print("it's a mesh")
     mesh = create_mesh(object.data)
-    #objects_to_write.append(mesh)
     mesh.groups = []
-    #TODO get vertex groups with object.vertex_groups
     for vg in object.vertex_groups:
-      g = (vg.index, vg.name)
-      mesh.groups.append(g)
+      #g = (vg.index, vg.name)
+      g = VertexGroup(vg.name)
+      mesh.groups.insert(vg.index, g)
       print("vg index : " + str(vg.index))
       print("vg name : " + str(vg.name))
       try:
         print("vg weight of vertex 0 : " + str(vg.weight(0)))
       except:
         print("vertex 0 is not in this group")
+
+    for i,w in enumerate(mesh.weights):
+      for g in w:
+        mesh.groups[g[0]].weights.append([i,g[1]])
+
+      #print("i is : " + str(i))
+      #print("index of group is : " + str(w))
+      
+    #print("group 1 : " + str(mesh.groups[1].weights))
+
 
     #TODO material
     mat = object.active_material
@@ -140,7 +153,6 @@ def export_object(object):
   elif object.type == 'ARMATURE':
     print("it's an armature")
     armature = create_armature(object.data)
-    #objects_to_write.append(armature)
     return armature
 
   return None
@@ -253,18 +265,24 @@ class Mesh:
     for g in mesh.groups:
       # name
       # index
-      write_string(file, g[1])
-      file.write(struct.pack('H', g[0]))
+      write_string(file, g.name)
+      print("mesh group : " + g.name)
+      file.write(struct.pack('H', len(mesh.weights)))
+      for w in g.weights:
+        file.write(struct.pack('H', w[0]))
+        file.write(struct.pack('f', w[1]))
+        print("mesh weight : " + str(w))
+      pass
 
-    #TODO write vertex weights
     # number of vertex
-    file.write(struct.pack('H', len(mesh.weights)))
-    for w in mesh.weights:
+    #file.write(struct.pack('H', len(mesh.weights)))
+    #for w in mesh.weights:
       # index
       # weight
-      file.write(struct.pack('H', w[0]))
-      file.write(struct.pack('f', w[1]))
+      #file.write(struct.pack('H', w[0]))
+      #file.write(struct.pack('f', w[1]))
       #print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
+    #  pass
   
 
 def get_triangles_uvs(mesh_data, vv):
@@ -313,11 +331,13 @@ def get_weights(mesh_data):
   weights = []
   for v in mesh_data.vertices:
     #TODO weight and groups
+    vw = []
     for g in v.groups:
       w = (g.group, g.weight)
-      weights.append(w)
+      vw.append(w)
       #print(" vert group  " + str(g.group))
       #print(" vert weight  " + str(g.weight))
+    weights.append(vw)
   return weights
 
 
