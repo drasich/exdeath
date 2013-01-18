@@ -267,7 +267,7 @@ class Mesh:
       # index
       write_string(file, g.name)
       print("mesh group : " + g.name)
-      file.write(struct.pack('H', len(mesh.weights)))
+      file.write(struct.pack('H', len(g.weights)))
       for w in g.weights:
         file.write(struct.pack('H', w[0]))
         file.write(struct.pack('f', w[1]))
