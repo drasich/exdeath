@@ -15,10 +15,11 @@ def start():
     if obj is not None:
       objects_to_write.append(obj)
 
-  print("will write to test.bin")
+  print("will write to test.bin : " + str(len(objects_to_write)))
   file = open('test.bin', 'bw');
   file.write(struct.pack('H', len(objects_to_write)))
   for o in objects_to_write:
+    print("object name write : " + o.name)
     o.write(file)
   file.close();
 
@@ -66,6 +67,7 @@ class Curve:
 
 from bpy.types import PoseBone
 def export_action(object, action):
+  print("Action name : " + action.name)
   a = Action(action.name)
   a.frame_range = action.frame_range
 
