@@ -45,6 +45,11 @@ class Curve:
 
   def addFrame(self, frame, index, value):
     found = False
+    if self.datatype == "quaternion":
+      if index == 0:
+        index = 3
+      else:
+        index = index -1;
     for f in self.frames:
       if f[0] == frame:
         f[1][index] = value
@@ -211,7 +216,8 @@ def create_bone(bone):
   bo.name = bone.name
   bo.matrix = bone.matrix_local
   bo.position = bone.matrix_local.to_translation()
-  bo.rotation = bone.matrix_local.to_quaternion()
+  bq = bone.matrix_local.to_quaternion()
+  bo.rotation = [bq.x, bq.y, bq.z, bq.w]
   #print("bone " + bone.name)
   #print("matrix " + str(bone.matrix))
   #print("matrix relative to armature " + str(bone.matrix_local))
