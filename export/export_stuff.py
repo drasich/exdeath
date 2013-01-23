@@ -13,6 +13,9 @@ def start():
         obj.actions.append(action)
 
     if obj is not None:
+      obj.position = o.location
+      bv = o.rotation_quaternion
+      obj.rotation = [bv.x, bv.y, bv.z, bv.w]
       objects_to_write.append(obj)
 
   print("will write to test.bin : " + str(len(objects_to_write)))
@@ -172,6 +175,9 @@ class Armature:
     write_type(file, "armature")
     write_string(file, armature.name)
 
+    #write_vec3(file, armature.position)
+    #write_vec4(file, armature.rotation)
+
     file.write(struct.pack('H', len(armature.bones)))
     for bone in armature.bones:
       write_bone(file, bone)
@@ -250,6 +256,9 @@ class Mesh:
     #print("mesh : " + str(mesh))
     write_type(file, "mesh")
     write_string(file, mesh.name)
+
+    #write_vec3(file, mesh.position)
+    #write_vec4(file, mesh.rotation)
   
     file.write(struct.pack('H', len(mesh.vertices)))
     for v in mesh.vertices:
@@ -375,6 +384,12 @@ def write_type(file, str):
 def write_string(file, str):
   s = str.encode('latin1')
   file.write(struct.pack("H%ds" % len(s), len(s), s))
+
+def write_vec3(file, v):
+  file.write(struct.pack('fff', v[0], v[1], v[2]))
+
+def write_vec4(file, v):
+  file.write(struct.pack('ffff', v[0], v[1], v[2], v[3]))
  
 def write_material(mat):
   #file.write(struct.pack('H', len(mesh.vertices)))
