@@ -66,6 +66,9 @@ class Curve:
         self.frames.append((frame, [0,0,0]))
       f = self.frames[-1]
       f[1][index] = value
+      if index == 3:
+        print("frame : " + str(f))
+
 
 
 from bpy.types import PoseBone
@@ -223,14 +226,18 @@ def create_bone(bone):
   #bo.test
   bo.name = bone.name
   bo.matrix = bone.matrix_local
-  bo.position = bone.matrix_local.to_translation()
-  bq = bone.matrix_local.to_quaternion()
+  lrs = bone.matrix_local.decompose()
+  bo.position = lrs[0]
+  bq = lrs[1]
   bo.rotation = [bq.x, bq.y, bq.z, bq.w]
   #print("bone " + bone.name)
   #print("matrix " + str(bone.matrix))
   #print("matrix relative to armature " + str(bone.matrix_local))
   #print("matrix relative to armature to translation " + str(bone.matrix_local.to_translation()))
-  #print("matrix head " + str(bone.head))
+  print("bone head " + str(bone.head))
+  print("bone tail " + str(bone.tail))
+  print("matrix " + str(bone.matrix))
+  print("matrix local " + str(bone.matrix_local))
   #head = position
   # I don't think we need tail? maybe later?
   bo.children = []
@@ -276,7 +283,6 @@ class Mesh:
     for uv in mesh.uvs:
       file.write(struct.pack('ff', uv[0], uv[1])) 
 
-    # TODO write vertex groups
     # number of groups
     file.write(struct.pack('H', len(mesh.groups)))
     for g in mesh.groups:
@@ -292,13 +298,15 @@ class Mesh:
       pass
 
     # number of vertex
-    #file.write(struct.pack('H', len(mesh.weights)))
-    #for w in mesh.weights:
+    file.write(struct.pack('H', len(mesh.weights)))
+    for warray in mesh.weights:
       # index
       # weight
-      #file.write(struct.pack('H', w[0]))
-      #file.write(struct.pack('f', w[1]))
-      #print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
+      file.write(struct.pack('H', len(warray)))
+      for w in warray:
+        file.write(struct.pack('H', w[0]))
+        file.write(struct.pack('f', w[1]))
+        print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
     #  pass
   
 
