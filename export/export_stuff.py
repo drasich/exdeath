@@ -6,6 +6,7 @@ def start():
   objects_to_write = []
   for o in bpy.data.objects:
     obj = export_object(o)
+
     for a in bpy.data.actions:
       action = export_action(o, a)
       if obj is not None and action is not None:
@@ -17,14 +18,29 @@ def start():
       bv = o.rotation_quaternion
       obj.rotation = [bv.x, bv.y, bv.z, bv.w]
       objects_to_write.append(obj)
-
-  print("will write to test.bin : " + str(len(objects_to_write)))
+ 
+  print("Will write " + str(len(objects_to_write))+ " object(s) to file test.bin")
   file = open('test.bin', 'bw');
   file.write(struct.pack('H', len(objects_to_write)))
   for o in objects_to_write:
     print("object name write : " + o.name)
     o.write(file)
   file.close();
+
+  write(objects_to_write)
+
+def write(objects):
+  for o in objects:
+    filename = o.name
+    if type(o) == Mesh:
+      filename = o.name + ".mesh"
+    elif type(o) == Armature:
+      filename = o.name + ".arm"
+    print("Will write object '" + o.name + "' to file: " + filename)
+    file = open(filename, 'bw');
+    o.write(file)
+  file.close();
+
 
 class Action:
   def __init__(self, name):
