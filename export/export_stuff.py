@@ -296,7 +296,11 @@ class Mesh:
       file.write(struct.pack('fff', n[0], n[1], n[2])) 
   
     file.write(struct.pack('H', len(mesh.uvs)))
+    #print("uvs : " + str(mesh.uvs))
     for uv in mesh.uvs:
+      #print("uv to write " + str(uv))
+      #print("uv0 to write " + str(uv) + ", " + str(uv[0]))
+      #print("uv1 to write " + str(uv) + ", " + str(uv[1]))
       file.write(struct.pack('ff', uv[0], uv[1])) 
 
     # number of groups
@@ -332,32 +336,38 @@ def get_triangles_uvs(mesh_data, vv):
   uvdata = []
 
   if len(mesh_data.uv_layers) > 0:
-    uvdata = mesh_data.uv_layers[0].data
-    uvs = [0,0]* len(vv)
+    uvs = [0]* len(vv)
 
-  i = 0
-  uvc = 0
-
-  for face in mesh_data.tessfaces:
+  for i, face in enumerate(mesh_data.tessfaces):
     vertices = face.vertices
     triangles.append((vertices[0], vertices[1], vertices[2]))
-    #print(str(i) + " append this " + str(vertices[0]) + str(vertices[1]) +str(vertices[2]))
-    if uvdata:
-      print(" with uv " + str(uvdata[uvc].uv) + str(uvdata[uvc+1].uv) +str(uvdata[uvc+2].uv))
-      uvs[vertices[0]] = uvdata[uvc].uv
-      uvs[vertices[1]] = uvdata[uvc+1].uv
-      uvs[vertices[2]] = uvdata[uvc+2].uv
-    i +=1
-    uvc+=3
+    #print(str(i) + " append this " + str(vertices[0]) + ", " + str(vertices[1]) + ", " +str(vertices[2]))
+    do_uv = bool(mesh_data.tessface_uv_textures)
+    uvdata = mesh_data.tessface_uv_textures.active.data[i]
+    if do_uv:
+      #print(" with uv " + str(uvdata[uvc].uv) + str(uvdata[uvc+1].uv) +str(uvdata[uvc+2].uv))
+      f_uv = uvdata.uv;
+      if uvs[vertices[0]] == 0:
+        uvs[vertices[0]] = f_uv[0]
+      if uvs[vertices[1]] == 0:
+        uvs[vertices[1]] = f_uv[1]
+      if uvs[vertices[2]] == 0:
+        uvs[vertices[2]] = f_uv[2]
 
-    # It's a quad we need one more triangle.
+      # It's a quad we need one more triangle.
     if len(vertices) == 4:
       triangles.append((vertices[0], vertices[2], vertices[3]))
       #print(str(i) + " append this4  " + str(vertices[0]) + str(vertices[2]) +str(vertices[3]))
-      if uvdata:
-        uvs[vertices[3]] = uvdata[uvc].uv
-      i +=1
-      uvc+=1
+      if do_uv:
+        f_uv = uvdata.uv;
+        ov = uvs[vertices[3]]
+        if ov != 0 :
+          #if ov[0] != f_uv[3][0] or ov[1] != f_uv[3][1]:
+          #  print("it was : " + str(ov) + ", " + str(ov[0]) + ", " + str(ov[1]) )
+          #  print(" with uv4444 " + str(f_uv[3]) +", " + str(f_uv[3][0]) + ", " + str(f_uv[3][1]))
+          pass
+        else:
+          uvs[vertices[3]] = f_uv[3]
 
   return triangles, uvs
 

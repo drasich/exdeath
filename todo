@@ -1,0 +1,2 @@
+in get_triangles_uvs, if vertex has multiple uvs, make new vertex
+check remove_face_uv in export_3ds.py
