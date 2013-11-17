@@ -329,24 +329,21 @@ class Mesh:
         print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
     #  pass
   
-def vertex_index_get_or_create(olduv, newuv, uvs, vv, vertices, ind):
-  #olduv = uvs[vertices[ind]]
-  #newuv = f_uv[ind]
+def vertex_index_get_or_create(face_uv, uvs, vertices, vertex_indices, face_vert_index):
+  olduv = uvs[vertex_indices[face_vert_index]]
+  newuv = face_uv[face_vert_index]
   if olduv != 0 :
     if olduv[0] != newuv[0] or olduv[1] != newuv[1]:
-      #print("it was : " + str(ov) + ", " + str(ov[0]) + ", " + str(ov[1]) )
-      #print(" with uv4444 " + str(f_uv[3]) +", " + str(f_uv[3][0]) + ", " + str(f_uv[3][1]))
-
-      newvert = vv[vertices[ind]]
-      vv.append(newvert)
+      newvert = vertices[vertex_indices[face_vert_index]]
+      vertices.append(newvert)
       uvs.append(newuv)
-      index = len(vv) -1
+      index = len(vertices) -1
     else:
-      uvs[vertices[ind]] = newuv
-      index = vertices[ind]
+      uvs[vertex_indices[face_vert_index]] = newuv
+      index = vertex_indices[face_vert_index]
   else:
-    uvs[vertices[ind]] = newuv
-    index = vertices[ind]
+    uvs[vertex_indices[face_vert_index]] = newuv
+    index = vertex_indices[face_vert_index]
   return index
 
 def get_triangles_uvs(mesh_data, vv):
@@ -364,29 +361,22 @@ def get_triangles_uvs(mesh_data, vv):
     ind0 = vertices[0]
     ind1 = vertices[1]
     ind2 = vertices[2]
-    #print(str(i) + " append this " + str(vertices[0]) + ", " + str(vertices[1]) + ", " +str(vertices[2]))
     do_uv = bool(mesh_data.tessface_uv_textures)
     uvdata = mesh_data.tessface_uv_textures.active.data[i]
     if do_uv:
-      #print(" with uv " + str(uvdata[uvc].uv) + str(uvdata[uvc+1].uv) +str(uvdata[uvc+2].uv))
       f_uv = uvdata.uv;
-      ov = uvs[vertices[0]]
-      ind0 = vertex_index_get_or_create(ov, f_uv[0], uvs, vv, vertices, 0)
-      ov = uvs[vertices[1]]
-      ind1 = vertex_index_get_or_create(ov, f_uv[1], uvs, vv, vertices, 1)
-      ov = uvs[vertices[2]]
-      ind2 = vertex_index_get_or_create(ov, f_uv[2], uvs, vv, vertices, 2)
+      ind0 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 0)
+      ind1 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 1)
+      ind2 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 2)
 
     triangles.append((ind0, ind1, ind2))
 
       # It's a quad we need one more triangle.
     if len(vertices) == 4:
-      #print(str(i) + " append this4  " + str(vertices[0]) + str(vertices[2]) +str(vertices[3]))
       ind3 = vertices[3]
       if do_uv:
         f_uv = uvdata.uv;
-        ov = uvs[vertices[3]]
-        ind3 = vertex_index_get_or_create(ov, f_uv[3], uvs, vv, vertices, 3)
+        ind3 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 3)
 
       triangles.append((ind0, ind2, ind3))
 
