@@ -362,8 +362,9 @@ def get_triangles_uvs(mesh_data, vv):
     ind1 = vertices[1]
     ind2 = vertices[2]
     do_uv = bool(mesh_data.tessface_uv_textures)
-    uvdata = mesh_data.tessface_uv_textures.active.data[i]
+    uvdata = None
     if do_uv:
+      uvdata = mesh_data.tessface_uv_textures.active.data[i]
       f_uv = uvdata.uv;
       ind0 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 0)
       ind1 = vertex_index_get_or_create(f_uv, uvs, vv, vertices, 1)
