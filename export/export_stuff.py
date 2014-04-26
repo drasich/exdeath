@@ -10,13 +10,14 @@ def start():
     for a in bpy.data.actions:
       action = export_action(o, a)
       if obj is not None and action is not None:
-        print("adding action to object")
+        print("adding action to object '" + obj.name +"'")
         obj.actions.append(action)
 
     if obj is not None:
       obj.position = o.location
       bv = o.rotation_quaternion
       obj.rotation = [bv.x, bv.y, bv.z, bv.w]
+      obj.scale = o.scale
       objects_to_write.append(obj)
  
   print("Will write " + str(len(objects_to_write))+ " object(s) to file test.bin")
@@ -194,8 +195,9 @@ class Armature:
     write_type(file, "armature")
     write_string(file, armature.name)
 
-    #write_vec3(file, armature.position)
-    #write_vec4(file, armature.rotation)
+    write_vec3(file, armature.position)
+    write_vec4(file, armature.rotation)
+    write_vec3(file, armature.scale)
 
     file.write(struct.pack('H', len(armature.bones)))
     for bone in armature.bones:
@@ -246,6 +248,7 @@ def create_bone(bone):
   bo.position = lrs[0]
   bq = lrs[1]
   bo.rotation = [bq.x, bq.y, bq.z, bq.w]
+  #print("bone rotation " + str(bo.rotation))
   #print("bone " + bone.name)
   #print("matrix " + str(bone.matrix))
   #print("matrix relative to armature " + str(bone.matrix_local))
@@ -314,7 +317,7 @@ class Mesh:
       for w in g.weights:
         file.write(struct.pack('H', w[0]))
         file.write(struct.pack('f', w[1]))
-        print("mesh weight : " + str(w))
+        #print("mesh weight : " + str(w))
       pass
 
     # number of vertex
@@ -326,7 +329,7 @@ class Mesh:
       for w in warray:
         file.write(struct.pack('H', w[0]))
         file.write(struct.pack('f', w[1]))
-        print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
+        #print("write weight : " + str(w[0]) + " with weight : " +str(w[1]))
     #  pass
   
 def vertex_index_get_or_create(face_uv, uvs, vertices, vertex_indices, face_vert_index):
@@ -450,7 +453,7 @@ def handle_modifiers(o):
     if m.type == 'ARMATURE':
       print("there is an armature")
       armature = m.object
-      print("armature name is " + armature.name)
+      #print("armature name is " + armature.name)
 
 def write_bone(file, bone):
   write_string(file, bone.name)
