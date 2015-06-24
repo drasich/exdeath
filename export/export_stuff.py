@@ -249,16 +249,19 @@ def create_bone(bone):
   bq = lrs[1]
   bo.rotation = [bq.x, bq.y, bq.z, bq.w]
   #print("bone rotation " + str(bo.rotation))
-  #print("bone " + bone.name)
+  print("bone " + bone.name)
   #print("matrix " + str(bone.matrix))
   #print("matrix relative to armature " + str(bone.matrix_local))
   #print("matrix relative to armature to translation " + str(bone.matrix_local.to_translation()))
+  print("bone position " + str(bo.position))
   print("bone head " + str(bone.head))
+  print("bone head local " + str(bone.head_local))
   print("bone tail " + str(bone.tail))
-  print("matrix " + str(bone.matrix))
-  print("matrix local " + str(bone.matrix_local))
+  #print("matrix " + str(bone.matrix))
+  #print("matrix local " + str(bone.matrix_local))
   #head = position
-  # I don't think we need tail? maybe later?
+  bo.head = bone.head;
+  bo.tail = bone.tail;
   bo.children = []
   for b in bone.children:
     child = create_bone(b)
@@ -458,6 +461,10 @@ def handle_modifiers(o):
 def write_bone(file, bone):
   write_string(file, bone.name)
   v = bone.position
+  file.write(struct.pack('fff', v[0], v[1], v[2]))
+  v = bone.head
+  file.write(struct.pack('fff', v[0], v[1], v[2]))
+  v = bone.tail
   file.write(struct.pack('fff', v[0], v[1], v[2]))
   v = bone.rotation
   file.write(struct.pack('ffff', v[0], v[1], v[2], v[3]))
