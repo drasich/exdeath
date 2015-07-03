@@ -48,19 +48,20 @@ class Action:
     self.name = name
     self.curves = []
 
-  def getOrCreateCurve(self, bone_name, t):
+  def getOrCreateCurve(self, bone_name, bone_index, t):
     #TODO can optimize this?
     for c in self.curves:
-      if c.bone == bone_name and c.datatype == t:
+      if c.bone_name == bone_name and c.bone_index == bone_index and c.datatype == t:
         return c
 
-    c = Curve(bone_name, t)
+    c = Curve(bone_name, bone_index, t)
     self.curves.append(c)
     return c
 
 class Curve:
-  def __init__(self, bone, t):
-    self.bone = bone
+  def __init__(self, bone_name, bone_index, t):
+    self.bone_name = bone_name
+    self.bone_index = bone_index
     self.datatype = t
     self.frames = []
 
@@ -127,7 +128,10 @@ def export_action(object, action):
         elif fcu.data_path.endswith("location"):
           t="position"
 
-        curve = a.getOrCreateCurve(prop.data.bone.name, t)
+        print("trying to get curve with bone : " + prop.data.bone.name + " and index " + str(prop.data.bone["index"]))
+        bone_name = prop.data.bone.name
+        bone_index = prop.data.bone["index"]
+        curve = a.getOrCreateCurve(bone_name, bone_index, t)
         for frame in fcu.keyframe_points:
           #curve.frames.append(frame.co)
           curve.addFrame(frame.co[0], fcu.array_index, frame.co[1])
@@ -200,6 +204,7 @@ class Armature:
     write_vec3(file, armature.scale)
 
     file.write(struct.pack('H', len(armature.bones)))
+    print("......... armature has " + str(len(armature.bones)))
     for bone in armature.bones:
       write_bone(file, bone)
 
@@ -209,7 +214,8 @@ class Armature:
       write_string(file, action.name)
       file.write(struct.pack('H', len(action.curves)))
       for curve in action.curves:
-        write_string(file, curve.bone)
+        write_string(file, curve.bone_name)
+        file.write(struct.pack('H', curve.bone_index))
         write_string(file, curve.datatype)
         file.write(struct.pack('H', len(curve.frames)))
         for frame in curve.frames:
@@ -232,16 +238,39 @@ def create_armature(data):
   armature.bones = []
   armature.actions = []
   armature.name = data.name
+  armature.relations = []
   #TODO position and rotation of armature
+  print("when creating the armature there is : " + str(len(data.bones)))
+  i = 0
   for b in data.bones:
-    bone = create_bone(b)
+    b["index"] = i
+    bone = create_bone(b, i)
     armature.bones.append(bone)
+    i = i +1
+  i = 0
+  for b in data.bones:
+    print(b.name + " has the index : " + str(b["index"]))
+    if b.parent is not None:
+        print("   and the parent is : " + b.parent.name + ", " + str(b.parent["index"]))
+        armature.bones[i].parent = b.parent["index"]
+    for c in b.children:
+        print("   and there is a child : " + c.name + ", " + str(c["index"]))
+        armature.bones[i].children.append(c["index"])
+    i = i +1
+      #armature.bones[i].parent = 
+    #TODO also test child
+
+    #for b i
   return armature
 
 
-def create_bone(bone):
+def create_bone(bone, index):
   bo = Bone()
   #bo.test
+  #bone.index = index
+  bo.index = index
+  bo.parent = -1
+  
   bo.name = bone.name
   bo.matrix = bone.matrix_local
   lrs = bone.matrix_local.decompose()
@@ -263,9 +292,10 @@ def create_bone(bone):
   bo.head = bone.head;
   bo.tail = bone.tail;
   bo.children = []
-  for b in bone.children:
-    child = create_bone(b)
-    bo.children.append(child)
+  #
+  #for b in bone.children:
+    #child = create_bone(b, -1)
+    #bo.children.append(child)
 
   return bo
 
@@ -468,9 +498,15 @@ def write_bone(file, bone):
   file.write(struct.pack('fff', v[0], v[1], v[2]))
   v = bone.rotation
   file.write(struct.pack('ffff', v[0], v[1], v[2], v[3]))
+
+  has_parent = bone.parent >= 0
+  file.write(struct.pack('?', has_parent))
+  if has_parent:
+    file.write(struct.pack('H', bone.parent))
+
   file.write(struct.pack('H', len(bone.children)))
   for c in bone.children:
-    write_bone(file, c)
+    file.write(struct.pack('H', c))
 
 
 
