@@ -289,7 +289,8 @@ def create_bone(bone, index):
   #print("matrix " + str(bone.matrix))
   #print("matrix local " + str(bone.matrix_local))
   #head = position
-  bo.head = bone.head;
+  bo.head = bone.head
+  bo.head_from_arm = bone.head_local
   bo.tail = bone.tail;
   bo.children = []
   #
@@ -493,6 +494,8 @@ def write_bone(file, bone):
   v = bone.position
   file.write(struct.pack('fff', v[0], v[1], v[2]))
   v = bone.head
+  file.write(struct.pack('fff', v[0], v[1], v[2]))
+  v = bone.head_from_arm
   file.write(struct.pack('fff', v[0], v[1], v[2]))
   v = bone.tail
   file.write(struct.pack('fff', v[0], v[1], v[2]))
