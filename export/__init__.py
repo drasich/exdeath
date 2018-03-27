@@ -42,5 +42,5 @@ def unregister():
 if __name__ == "__main__":
     register()
 
-def backgroundExport():
-  export_stuff.start()
+def backgroundExport(directory):
+  export_stuff.start(directory)

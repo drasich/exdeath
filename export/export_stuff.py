@@ -2,7 +2,7 @@ import bpy
 import struct
 
 
-def start():
+def start(directory=""):
   objects_to_write = []
   for o in bpy.data.objects:
     obj = export_object(o)
@@ -28,9 +28,9 @@ def start():
     o.write(file)
   file.close();
 
-  write(objects_to_write)
+  write(directory, objects_to_write)
 
-def write(objects):
+def write(directory, objects):
   for o in objects:
     filename = o.name
     if type(o) == Mesh:
@@ -38,7 +38,10 @@ def write(objects):
     elif type(o) == Armature:
       filename = o.name + ".arm"
     print("Will write object '" + o.name + "' to file: " + filename)
-    file = open(filename, 'bw');
+    if directory != "":
+        file = open(directory + "/" + filename, 'bw');
+    else:
+        file = open(filename, 'bw');
     o.write(file)
   file.close();
 

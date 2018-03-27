@@ -9,11 +9,17 @@ import export
 
 def main():
   argv = sys.argv
-  #argv = argv[argv.index("--") + 1:] # get all args after "--"
- 
   obj_out = argv[0]
+
+  directory = ""
+  if "--" in argv:
+    argv = argv[argv.index("--") + 1:] # get all args after "--"
+    directory = argv[0]
+
+  print(*argv, sep='\n')
+
   print("in the main")
-  yep = export.backgroundExport()
+  yep = export.backgroundExport(directory)
    
   #bpy.ops.export_stuff.obj(filepath=obj_out, axis_forward='-Z', axis_up='Y')
 
